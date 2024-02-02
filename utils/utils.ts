@@ -53,6 +53,8 @@ export const createOptions = async (
     nutrition,
     cuisine,
   });
+  console.log('input', input);
+  
   const response = await model.invoke(input);
 
   try {

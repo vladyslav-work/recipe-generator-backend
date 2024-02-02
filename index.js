@@ -4,8 +4,7 @@ import cors from "cors";
 import passport from "passport";
 import cookieParser from "cookie-parser";
 
-import interviews from "./routes/interviews.js";
-import messages from "./routes/messages.js";
+import dishes from "./routes/dishes.js";
 
 import dotenv from "dotenv";
 import path from "path";
@@ -31,8 +30,7 @@ app.get("/api", (req, res) => {
   res.send("Hello to API");
 });
 
-app.use("/api/interview-sessions", interviews);
-app.use("/api/messages", messages);
+app.use("/api", dishes);
 
 app.use(express.static("public"));
 

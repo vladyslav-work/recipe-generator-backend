@@ -1,8 +1,8 @@
 import { DataTypes } from "sequelize";
 import sequelize from "./sequelize"; // Assuming you have configured Sequelize properly
 
-const Option = sequelize.define(
-  "options",
+const Variation = sequelize.define(
+  "variations",
   {
     dish:{
       type: DataTypes.INTEGER,
@@ -29,4 +29,4 @@ const Option = sequelize.define(
   }
 );
 
-export default Option;
+export default Variation;

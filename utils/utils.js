@@ -1,27 +1,21 @@
 import { z } from "zod";
-import { OpenAI } from "langchain/llms/openai";
-import { PromptTemplate } from "langchain/prompts";
+import { OpenAI } from "@langchain/openai";
+import { PromptTemplate } from "@langchain/core/prompts";
 import {
   StructuredOutputParser,
   OutputFixingParser,
 } from "langchain/output_parsers";
 
-const client = new OpenAI();
-
-function sleep(ms: number) {
+function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-type Option = {
-  title: string;
-  description: string;
-};
+// type Option = {
+//   title: string;
+//   description: string;
+// };
 
-export const createOptions = async (
-  material: string,
-  nutrition: string,
-  cuisine: string
-): Promise<Option[]> => {
+export const createOptions = async (material, nutrition, cuisine) => {
   const parser = StructuredOutputParser.fromZodSchema(
     z
       .array(
@@ -46,15 +40,15 @@ export const createOptions = async (
     partialVariables: { format_instructions: formatInstructions },
   });
 
-  const model = new OpenAI({ temperature: 0.5, modelName: "gpt-3.5-turbo" });
+  const model = new OpenAI({openAIApiKey:process.env.OPENAI_API_KEY, temperature: 0.5, modelName: "gpt-3.5-turbo" });
 
   const input = await prompt.format({
     material,
     nutrition,
     cuisine,
   });
-  console.log('input', input);
-  
+  console.log("input", input);
+
   const response = await model.invoke(input);
 
   try {
@@ -73,4 +67,3 @@ export const createOptions = async (
     return output;
   }
 };
-

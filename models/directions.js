@@ -1,5 +1,6 @@
 import { DataTypes } from "sequelize";
-import sequelize from "./sequelize"; // Assuming you have configured Sequelize properly
+import sequelize from "../utils/sequelize.js"; // Assuming you have configured Sequelize properly
+import Dish from "./dishes.js";
 
 const Direction = sequelize.define(
   "directions",

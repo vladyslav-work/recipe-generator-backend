@@ -1,8 +1,8 @@
-import Dish from "../models/dishes";
-import Direction from "../models/directions";
-import Ingredient from "../models/ingredients";
-import Variation from "../models/variations";
-import { createOptions } from "../utils/utils";
+import Dish from "../models/dishes.js";
+import Direction from "../models/directions.js";
+import Ingredient from "../models/ingredients.js";
+import Variation from "../models/variations.js";
+import { createOptions } from "../utils/utils.js";
 
 export const createVariations = async (req, res) => {
   const { nutrition, material, cuisine } = req.body;

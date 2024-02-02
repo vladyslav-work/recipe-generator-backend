@@ -1,0 +1,36 @@
+{
+  "name": "ai_interviewer",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "server": "nodemon index.js",
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "@langchain/openai": "^0.0.13",
+    "bcryptjs": "^2.4.3",
+    "body-parser": "^1.19.0",
+    "cloudinary": "^1.32.0",
+    "cookie-parser": "^1.4.6",
+    "cors": "^2.8.5",
+    "data-uri-to-buffer": "^5.0.1",
+    "dotenv": "^16.0.0",
+    "express": "^4.17.1",
+    "jsonwebtoken": "^8.5.1",
+    "langchain": "^0.1.11",
+    "mongoose": "^6.3.0",
+    "multer": "^1.4.5-lts.1",
+    "node-fetch": "^3.3.2",
+    "nodemailer": "^6.7.2",
+    "nodemailer-sendinblue-transport": "^2.0.1",
+    "nodemon": "^2.0.15",
+    "openai": "^4.26.0",
+    "passport": "^0.5.2",
+    "passport-jwt": "^4.0.0",
+    "sequelize": "^6.35.2",
+    "stripe": "^14.11.0",
+    "validator": "^13.7.0"
+  }
+}

@@ -7,7 +7,7 @@ Express backend project for recipe generator
 - name : Vladyslav M.
 - email : vladislavmondzolevskij105@gmail.com
 
-## how to development
+## how to run as development
 
 ```
 npm install

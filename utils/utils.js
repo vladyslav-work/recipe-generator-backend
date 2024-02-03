@@ -23,7 +23,7 @@ export const createOptions = async (material, nutrition, cuisine) => {
           title: z.string().describe("title of a variation of the recipe"),
           description: z
             .string()
-            .describe("introduction of a variation of the recipe"),
+            .describe("description of a variation of the recipe"),
         })
       )
       .describe("json array of 3 variations of a recipe")
@@ -73,65 +73,61 @@ export const createOptions = async (material, nutrition, cuisine) => {
   }
 };
 
-export const createRecipe = async (title, description) => {
-  const parser = StructuredOutputParser.fromZodSchema(
-    z.object({
-      title: z.string().describe("title of the recipe"),
-      description: z.string().describe("detailed introduction of the recipe"),
-      servingSize: z.string().describe("serving size of  the recipe"),
-      ingredients: z
-        .array({
-          quantity: z.string().describe("quantity of the ingredient"),
-          name: z.string().describe("name of the ingredient"),
+export const generateRecipe = async (title, description) => {
+  const schema = z.object({
+    title: z.string().describe("Title of the recipe"),
+    description: z.string().describe("Detailed introduction of the recipe"),
+    serving: z.string().describe("Serving size of the recipe"),
+    ingredients: z
+      .array(
+        z.object({
+          quantity: z.string().describe("Quantity of the ingredient"),
+          name: z.string().describe("Name of the ingredient"),
           preparationMethod: z
             .string()
-            .describe(
-              "preparation method of the ingredient - this is optional"
-            ),
+            .optional()
+            .describe("Preparation method of the ingredient"),
         })
-        .describe("ingredients of the recipe"),
-      directions: z
-        .array(z.string().describe("a instruction of the instructions"))
-        .describe("instructions of the recipe"),
-      readyTime: z.string().describe("reparation time in minutes of the recipe")
-    })
-  );
+      )
+      .describe("Ingredients of the recipe"),
+    directions: z.array(z.string().describe("Instruction of the recipe")),
+    readyTime: z
+      .string()
+      .describe("Preparation time in minutes of the recipe"),
+  }).describe("the recipe generated");
 
+  const parser = StructuredOutputParser.fromZodSchema(schema);
   const formatInstructions = parser.getFormatInstructions();
 
   const prompt = new PromptTemplate({
     template: `Create a recipe titled {title} with the following description: {description}.
-
+    
     A recipe should include a title, a detailed description, serving size, ingredients, instructions, and preparation time in minutes.`,
     inputVariables: ["title", "description"],
     partialVariables: { format_instructions: formatInstructions },
   });
 
-  const model = new OpenAI({
+  const openAIConfig = {
     openAIApiKey: process.env.OPENAI_API_KEY,
     temperature: 0,
     modelName: "gpt-3.5-turbo",
-  });
+  };
 
-  const input = await prompt.format({
-    title,
-    description
-  });
+  const model = new OpenAI(openAIConfig);
+
+  const input = await prompt.format({ title, description });
   const response = await model.invoke(input);
 
   try {
     const recipe = await parser.parse(response);
-    console.log(recipe);
     return recipe;
-  } catch (e) {
-    console.error("Failed to parse bad output: ", e);
+  } catch (error) {
 
     const fixParser = OutputFixingParser.fromLLM(
-      new OpenAI({ temperature: 0, modelName: "gpt-3.5-turbo" }),
+      new OpenAI(openAIConfig),
       parser
     );
-    const recipe = await fixParser.parse(response);
-    console.log("Fixed recipe: ", recipe);
-    return recipe;
+    const fixedRecipe = await fixParser.parse(response);
+    return fixedRecipe;
   }
 };

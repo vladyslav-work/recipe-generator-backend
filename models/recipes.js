@@ -32,7 +32,7 @@ const Recipe = sequelize.define(
     readyTime: {
       type: DataTypes.INTEGER,
       defaultValue: 0,
-    }
+    },
   },
   {
     timestamps: true,

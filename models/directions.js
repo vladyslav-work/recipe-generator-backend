@@ -12,7 +12,7 @@ const Direction = sequelize.define(
         key: 'id'
       }
     },
-    discription: {
+    description: {
       type: DataTypes.STRING,
       allowNull: false,
     }

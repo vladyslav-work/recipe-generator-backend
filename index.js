@@ -39,7 +39,7 @@ const dbConfig = {
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
-  port: 3306
+  port: 3306,
 };
 
 const PORT = process.env.PORT || 5000;
@@ -47,17 +47,7 @@ const PORT = process.env.PORT || 5000;
 console.log(dbConfig);
 
 async function startServer() {
-  try {
-    const connection = await mysql.createConnection(dbConfig);
-    console.log("Connected to the MySQL database.");
-
-    app.locals.db = connection;
-
-    app.listen(PORT, () => console.log(`Server running on port: ${PORT}`));
-  } catch (error) {
-    console.error("MySQL connection failed:", error);
-    process.exit(1); // Exit the app if connection fails
-  }
+  app.listen(PORT, () => console.log(`Server running on port: ${PORT}`));
 }
 
 startServer();

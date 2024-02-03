@@ -6,6 +6,7 @@ import { createOptions } from "../utils/utils.js";
 
 export const createVariations = async (req, res) => {
   const { nutrition, material, cuisine } = req.body;
+  console.log(req.body);
   if (!nutrition || !material || !cuisine) {
     return res.status(400).json({ error: "Missing required fields" });
   }

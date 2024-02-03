@@ -1,8 +1,8 @@
 import { DataTypes } from "sequelize";
-import sequelize from "../sequelize.js";
+import sequelize from "../seq.js";
 
-const Dish = sequelize.define(
-  "dishes",
+const Recipe = sequelize.define(
+  "recipes",
   {
     step:{
       type: DataTypes.NUMBER,
@@ -39,4 +39,4 @@ const Dish = sequelize.define(
   }
 );
 
-export default Dish;
+export default Recipe;

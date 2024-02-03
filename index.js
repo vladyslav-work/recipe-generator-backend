@@ -4,11 +4,12 @@ import cors from "cors";
 import passport from "passport";
 import cookieParser from "cookie-parser";
 
-import dishes from "./routes/dishes.js";
+import routes from "./routes/routes.js";
 
 import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
+import Recipe from "./models/recipes.js";
 const __filename = fileURLToPath(import.meta.url);
 
 // 👇️ "/home/john/Desktop/javascript"
@@ -30,7 +31,7 @@ app.get("/api", (req, res) => {
   res.send("Hello to API");
 });
 
-app.use("/api", dishes);
+app.use("/api", routes);
 
 app.use(express.static("public"));
 
@@ -45,6 +46,7 @@ const dbConfig = {
 const PORT = process.env.PORT || 5000;
 
 console.log(dbConfig);
+
 
 async function startServer() {
   app.listen(PORT, () => console.log(`Server running on port: ${PORT}`));

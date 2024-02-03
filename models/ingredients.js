@@ -1,14 +1,14 @@
 import { DataTypes } from "sequelize";
-import sequelize from "../sequelize.js"; // Assuming you have configured Sequelize properly
-import Dish from "./dishes.js";
+import sequelize from "../seq.js"; // Assuming you have configured Sequelize properly
+import Recipe from "./recipes.js";
 
 const Ingredient = sequelize.define(
   "ingredients",
   {
-    dish:{
+    recipe:{
       type: DataTypes.INTEGER,
       references: {
-        model: Dish,
+        model: Recipe,
         key: 'id'
       }
     },

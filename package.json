@@ -6,7 +6,8 @@
   "type": "module",
   "scripts": {
     "server": "nodemon index.js",
-    "start": "node index.js"
+    "start": "node index.js",
+    "db" : "npx sequelize-cli db:migrate"
   },
   "dependencies": {
     "@langchain/openai": "^0.0.13",

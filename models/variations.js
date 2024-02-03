@@ -1,14 +1,14 @@
 import { DataTypes } from "sequelize";
-import sequelize from "../sequelize.js"; // Assuming you have configured Sequelize properly
-import Dish from "./dishes.js";
+import sequelize from "../seq.js"; // Assuming you have configured Sequelize properly
+import Recipe from "./recipes.js";
 
 const Variation = sequelize.define(
   "variations",
   {
-    dish:{
+    recipe:{
       type: DataTypes.INTEGER,
       references: {
-        model: Dish,
+        model: Recipe,
         key: 'id'
       }
     },
@@ -16,13 +16,9 @@ const Variation = sequelize.define(
       type: DataTypes.STRING,
       allowNull: false,
     },
-    discription: {
+    description: {
       type: DataTypes.STRING,
       allowNull: false,
-    },
-    selected : {
-      type: DataTypes.BOOLEAN,
-      default: false
     }
   },
   {

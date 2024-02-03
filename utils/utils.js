@@ -120,9 +120,9 @@ export const createRecipe = async (title, description) => {
   const response = await model.invoke(input);
 
   try {
-    const variations = await parser.parse(response);
-    console.log(response);
-    return variations;
+    const recipe = await parser.parse(response);
+    console.log(recipe);
+    return recipe;
   } catch (e) {
     console.error("Failed to parse bad output: ", e);
 
@@ -130,8 +130,8 @@ export const createRecipe = async (title, description) => {
       new OpenAI({ temperature: 0, modelName: "gpt-3.5-turbo" }),
       parser
     );
-    const output = await fixParser.parse(response);
-    console.log("Fixed output: ", output);
-    return output;
+    const recipe = await fixParser.parse(response);
+    console.log("Fixed recipe: ", recipe);
+    return recipe;
   }
 };

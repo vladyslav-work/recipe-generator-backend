@@ -18,6 +18,10 @@ module.exports = {
         allowNull: false,
         type: Sequelize.STRING,
       },
+      cuisine: {
+        allowNull: false,
+        type: Sequelize.STRING,
+      },
       nutrition: {
         allowNull: false,
         type: Sequelize.STRING,

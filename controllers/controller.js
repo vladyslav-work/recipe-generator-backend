@@ -52,6 +52,8 @@ export const createRecipe = async (req, res) => {
     recipe.description = generatedRecipe.description
     recipe.serving = generatedRecipe.serving
     recipe.readyTime = generatedRecipe.readyTime
+    await Direction.destroy({ where: { recipe: recipeId } });
+    await Ingredient.destroy({ where: { recipe: recipeId } });
     const directions = await Promise.all(
       generatedRecipe.directions.map(direction =>
         Direction.create({

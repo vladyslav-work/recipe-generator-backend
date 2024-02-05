@@ -16,6 +16,10 @@ const Recipe = sequelize.define(
       type: DataTypes.STRING,
       allowNull: false,
     },
+    cuisine: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
     title: {
       type: DataTypes.STRING
     },

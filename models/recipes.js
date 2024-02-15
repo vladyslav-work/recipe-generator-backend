@@ -8,7 +8,7 @@ const Recipe = sequelize.define(
       type: DataTypes.NUMBER,
       default: 0
     },
-    material: {
+    protein: {
       type: DataTypes.STRING,
       allowNull: false,
     },

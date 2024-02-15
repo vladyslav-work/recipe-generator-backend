@@ -14,7 +14,7 @@ module.exports = {
         type: Sequelize.INTEGER,
         defaultValue: 0,
       },
-      material: {
+      protein: {
         allowNull: false,
         type: Sequelize.STRING,
       },

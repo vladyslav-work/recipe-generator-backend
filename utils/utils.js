@@ -196,7 +196,7 @@ export const createImage = async (
 
     // 👇️ "/home/john/Desktop/javascript"
     const __dirname = path.dirname(__filename);
-    const dirPath = path.join(__dirname, "../public/api");
+    const dirPath = path.join(__dirname, "../public/api/images");
     const imagePath = path.resolve(__dirname, `../public/api/images/${imageName}`);
 
     // Make sure the directory exists

@@ -20,11 +20,11 @@ module.exports = {
         onDelete: "CASCADE"
       },
       title: {
-        type: Sequelize.STRING,
+        type: Sequelize.TEXT,
         allowNull: false
       },
       description: {
-        type: Sequelize.STRING,
+        type: Sequelize.TEXT,
         allowNull: false
       },
       selected: {

@@ -2,7 +2,6 @@ import Recipe from "../models/recipes.js";
 import Direction from "../models/directions.js";
 import Ingredient from "../models/ingredients.js";
 import Variation from "../models/variations.js";
-import axios from "axios";
 import { createImage, createOptions, generateRecipe } from "../utils/utils.js";
 
 export const createVariations = async (req, res) => {
@@ -56,6 +55,7 @@ export const selectVariation = async (req, res) => {
       return res.status(404).send({ message: "There is no recipe." });
     recipe.title = variation.title;
     recipe.description = variation.description;
+    recipe.image = null;
     await recipe.save()
     res.json({});
   } catch (error) {
@@ -87,6 +87,8 @@ export const getRecipe = async (req, res) => {
         ingredients,
         directions,
       };
+
+      console.log("completedRecipe", completedRecipe);
   
       return res.send(completedRecipe);
     }
@@ -104,7 +106,7 @@ export const getRecipe = async (req, res) => {
     const directions = await Promise.all(
       generatedRecipe.directions.map((direction) =>
         Direction.create({
-          recipeId: recipe.id,
+          recipe: recipe.id,
           description: direction,
         })
       )
@@ -112,7 +114,7 @@ export const getRecipe = async (req, res) => {
 
     const ingredients = await Promise.all(
       generatedRecipe.ingredients.map((ingredient) => {
-        const newIngredient = `${ingredient.quantity} <strong>${ingredient.name}</strong> <em>${ingredient.preparationMethod}</em>`;
+        const newIngredient = `${ingredient.quantity || ""} <strong>${ingredient.name}</strong> <em>${ingredient.preparationMethod || ""}</em>`;
         return Ingredient.create({
           recipe: recipe.id,
           description: newIngredient,

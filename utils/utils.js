@@ -82,22 +82,25 @@ export const generateRecipe = async (title, description) => {
     .object({
       title: z.string().describe("Title of the recipe"),
       description: z.string().describe("Detailed introduction of the recipe"),
-      serving: z.string().describe("Serving size of the recipe"),
+      serving: z.number().describe("Serving size of the recipe"),
       ingredients: z
         .array(
           z.object({
-            quantity: z.string().describe("Quantity of the ingredient"),
+            quantity: z
+              .string()
+              .optional()
+              .describe("Quantity of the ingredient"),
             name: z.string().describe("Name of the ingredient"),
             preparationMethod: z
               .string()
               .optional()
-              .describe("Preparation method of the ingredient"),
+              .describe("Precooking method of the ingredient"),
           })
         )
         .describe("Ingredients of the recipe"),
       directions: z.array(z.string().describe("Instruction of the recipe")),
       readyTime: z
-        .string()
+        .number()
         .describe("Total preparation time in minutes of the recipe"),
     })
     .describe("the recipe generated");
@@ -128,12 +131,20 @@ export const generateRecipe = async (title, description) => {
     const recipe = await parser.parse(response);
     return recipe;
   } catch (error) {
-    const fixParser = OutputFixingParser.fromLLM(
-      new OpenAI(openAIConfig),
-      parser
-    );
-    const fixedRecipe = await fixParser.parse(response);
-    return fixedRecipe;
+    let count = 0;
+    while (count < 10) {
+      count += 1;
+      try {
+        const fixParser = OutputFixingParser.fromLLM(
+          new OpenAI(openAIConfig),
+          parser
+        );
+        const fixedRecipe = await fixParser.parse(response);
+        return fixedRecipe;
+      } catch (error) {
+        console.log(error);
+      }
+    }
   }
 };
 
@@ -186,14 +197,14 @@ export const createImage = async (
     // 👇️ "/home/john/Desktop/javascript"
     const __dirname = path.dirname(__filename);
     const dirPath = path.join(__dirname, "../public/api");
-    const imagePath = path.resolve(__dirname, `../public/api/${imageName}`);
+    const imagePath = path.resolve(__dirname, `../public/api/images/${imageName}`);
 
     // Make sure the directory exists
     if (!fs.existsSync(dirPath)) {
       fs.mkdirSync(dirPath, { recursive: true });
     }
     fs.writeFileSync(imagePath, base64Data, "base64");
-    return `/api/${imageName}`;
+    return `/api/images/${imageName}`;
   } catch (err) {
     console.log(err);
     return null;

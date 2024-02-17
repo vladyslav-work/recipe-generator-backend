@@ -21,11 +21,11 @@ module.exports = {
       },
       variations: {
         type: Sequelize.TEXT,
-        allowNull: false
+        allowNull: true
       },
       main: {
         type: Sequelize.TEXT,
-        allowNull: false
+        allowNull: true
       },
       createdAt: {
         allowNull: false,

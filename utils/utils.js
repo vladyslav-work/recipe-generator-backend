@@ -56,14 +56,14 @@ export const createOptions = async (protein, nutrition, cuisine) => {
     nutrition,
     cuisine,
   });
-  console.log("input", input);
 
   const response = await model.invoke(input);
+  console.log("variations ================> \n", response);
 
   try {
     const variations = await parser.parse(response);
     console.log(response);
-    return variations;
+    return {variations, response};
   } catch (e) {
     console.error("Failed to parse bad output: ", e);
 
@@ -73,7 +73,7 @@ export const createOptions = async (protein, nutrition, cuisine) => {
     );
     const output = await fixParser.parse(response);
     console.log("Fixed output: ", output);
-    return output;
+    return {variations:output, response};
   }
 };
 
@@ -126,10 +126,11 @@ export const generateRecipe = async (title, description) => {
 
   const input = await prompt.format({ title, description });
   const response = await model.invoke(input);
-
+  console.log("Recipe ================= \n", response);
   try {
     const recipe = await parser.parse(response);
-    return recipe;
+    console.log("recipe", recipe);
+    return {recipe, response};
   } catch (error) {
     let count = 0;
     while (count < 10) {
@@ -140,7 +141,8 @@ export const generateRecipe = async (title, description) => {
           parser
         );
         const fixedRecipe = await fixParser.parse(response);
-        return fixedRecipe;
+        console.log("fixedRecipe", fixedRecipe);
+        return {recipe: fixedRecipe, response};
       } catch (error) {
         console.log(error);
       }
@@ -154,7 +156,6 @@ export const createImage = async (
   directions,
   ingredients
 ) => {
-  console.log(directions, ingredients);
   const directionsString = directions
     .map((direction, index) => index + 1 + " " + direction)
     .join("\n");
@@ -167,9 +168,6 @@ export const createImage = async (
   Please create an image of ${title}
 
   Description: ${description}
-  
-  Instruction:
-  ${directionsString}
 
   Don't contain images of ingredients.
   `;

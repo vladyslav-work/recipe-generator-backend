@@ -2,8 +2,8 @@ import { DataTypes } from "sequelize";
 import sequelize from "../seq.js"; // Assuming you have configured Sequelize properly
 import Recipe from "./recipes.js";
 
-const Variation = sequelize.define(
-  "variations",
+const Response = sequelize.define(
+  "responses",
   {
     recipe:{
       type: DataTypes.INTEGER,
@@ -12,13 +12,11 @@ const Variation = sequelize.define(
         key: 'id'
       }
     },
-    title: {
-      type: DataTypes.TEXT,
-      allowNull: false,
+    variations: {
+      type: DataTypes.TEXT
     },
-    description: {
-      type: DataTypes.TEXT,
-      allowNull: false,
+    main: {
+      type: DataTypes.TEXT
     }
   },
   {
@@ -26,4 +24,4 @@ const Variation = sequelize.define(
   }
 );
 
-export default Variation;
+export default Response;

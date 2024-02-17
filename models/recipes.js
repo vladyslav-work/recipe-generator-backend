@@ -9,25 +9,25 @@ const Recipe = sequelize.define(
       default: 0
     },
     protein: {
-      type: DataTypes.STRING,
+      type: DataTypes.TEXT,
       allowNull: false,
     },
     nutrition: {
-      type: DataTypes.STRING,
+      type: DataTypes.TEXT,
       allowNull: false,
     },
     cuisine: {
-      type: DataTypes.STRING,
+      type: DataTypes.TEXT,
       allowNull: false,
     },
     title: {
-      type: DataTypes.STRING
+      type: DataTypes.TEXT
     },
     description: {
-      type: DataTypes.STRING
+      type: DataTypes.TEXT
     },
     image:{
-      type: DataTypes.STRING,
+      type: DataTypes.TEXT,
     },
     serving: {
       type: DataTypes.INTEGER,

@@ -3,19 +3,22 @@ import Direction from "../models/directions.js";
 import Ingredient from "../models/ingredients.js";
 import Variation from "../models/variations.js";
 import { createImage, createOptions, generateRecipe } from "../utils/utils.js";
+import Response from "../models/responses.js";
 
 export const createVariations = async (req, res) => {
   const { nutrition, protein, cuisine } = req.body;
-  console.log(req.body);
   if (!nutrition || !protein || !cuisine) {
     return res.status(400).json({ message: "Missing required fields" });
   }
   try {
     const recipe = await Recipe.create({ protein, nutrition, cuisine });
-    const options = await createOptions(protein, nutrition, cuisine);
+    const { variations: options, response } = await createOptions(
+      protein,
+      nutrition,
+      cuisine
+    );
     const variations = await Promise.all(
       options.map((option) => {
-        console.log("option", option);
         return Variation.create({
           recipe: recipe.id,
           description: option.description,
@@ -23,6 +26,20 @@ export const createVariations = async (req, res) => {
         });
       })
     );
+    const responseObj = await Response.findOne({
+      where: { recipe: recipe.id },
+    });
+    if (responseObj) {
+      await Response.update(
+        { variations: response },
+        { where: { id: responseObj.id } }
+      );
+    } else
+      await Response.create({
+        recipe: recipe.id,
+        variations: response,
+      });
+
     res.send({ recipeId: recipe.id, variations });
   } catch (error) {
     console.log(error);
@@ -32,7 +49,6 @@ export const createVariations = async (req, res) => {
 
 export const getVariations = async (req, res) => {
   const { id } = req.params;
-  console.log("id================>", id);
   try {
     const variations = await Variation.findAll({ where: { recipe: id } });
     if (variations.length === 0)
@@ -56,7 +72,7 @@ export const selectVariation = async (req, res) => {
     recipe.title = variation.title;
     recipe.description = variation.description;
     recipe.image = null;
-    await recipe.save()
+    await recipe.save();
     res.json({});
   } catch (error) {
     console.log(error);
@@ -65,7 +81,6 @@ export const selectVariation = async (req, res) => {
 };
 
 export const getRecipe = async (req, res) => {
-  console.log(req.body);
   const { recipeId } = req.params;
   if (!recipeId) {
     return res.status(400).json({ message: "Recipe id is required" });
@@ -75,28 +90,42 @@ export const getRecipe = async (req, res) => {
     if (!recipe) {
       return res.status(400).json({ message: "Recipe Id is not valid" });
     }
-    if(recipe.image) {
-      const ingredients = await Ingredient.findAll({where :{
-        recipe: recipeId
-      }})
-      const directions = await Direction.findAll({where :{
-        recipe: recipeId
-      }})
+    if (recipe.image) {
+      const ingredients = await Ingredient.findAll({
+        where: {
+          recipe: recipeId,
+        },
+      });
+      const directions = await Direction.findAll({
+        where: {
+          recipe: recipeId,
+        },
+      });
       const completedRecipe = {
         recipe,
         ingredients,
         directions,
       };
 
-      console.log("completedRecipe", completedRecipe);
-  
       return res.send(completedRecipe);
     }
-    const generatedRecipe = await generateRecipe(
+    const {recipe: generatedRecipe, response} = await generateRecipe(
       recipe.title,
       recipe.description
     );
-    console.log(generatedRecipe);
+    const responseObj = await Response.findOne({
+      where: { recipe: recipeId },
+    });
+    if (responseObj) {
+      await Response.update(
+        { main: response },
+        { where: { id: responseObj.id } }
+      );
+    } else
+      await Response.create({
+        recipe: recipeId,
+        main: response,
+      });
     recipe.title = generatedRecipe.title;
     recipe.description = generatedRecipe.description;
     recipe.serving = generatedRecipe.serving;
@@ -114,7 +143,9 @@ export const getRecipe = async (req, res) => {
 
     const ingredients = await Promise.all(
       generatedRecipe.ingredients.map((ingredient) => {
-        const newIngredient = `${ingredient.quantity || ""} <strong>${ingredient.name}</strong> <em>${ingredient.preparationMethod || ""}</em>`;
+        const newIngredient = `${ingredient.quantity && ingredient.quantity.toLowerCase() !== "none" ? ingredient.quantity : ""} <strong>${
+          ingredient.name
+        }</strong> <em>${ingredient.preparationMethod && ingredient.preparationMethod.toLowerCase() !== "none" ? ingredient.preparationMethod : ""}</em>`;
         return Ingredient.create({
           recipe: recipe.id,
           description: newIngredient,
@@ -129,7 +160,6 @@ export const getRecipe = async (req, res) => {
         Object.values(ingredient).join(" ")
       )
     );
-
 
     recipe.image = imageURL;
     /// have to download image

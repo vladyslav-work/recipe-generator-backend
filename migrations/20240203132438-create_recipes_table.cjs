@@ -16,15 +16,15 @@ module.exports = {
       },
       protein: {
         allowNull: false,
-        type: Sequelize.STRING,
+        type: Sequelize.TEXT,
       },
       cuisine: {
         allowNull: false,
-        type: Sequelize.STRING,
+        type: Sequelize.TEXT,
       },
       nutrition: {
         allowNull: false,
-        type: Sequelize.STRING,
+        type: Sequelize.TEXT,
       },
       title: {
         type: Sequelize.TEXT,
@@ -33,7 +33,7 @@ module.exports = {
         type: Sequelize.TEXT,
       },
       image: {
-        type: Sequelize.STRING,
+        type: Sequelize.TEXT,
       },
       serving: {
         type: Sequelize.INTEGER,

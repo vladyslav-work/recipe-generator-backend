@@ -5,13 +5,50 @@ import Variation from "../models/variations.js";
 import { createImage, createOptions, generateRecipe } from "../utils/utils.js";
 import Response from "../models/responses.js";
 
+const getCount = async (ip) => {
+  try {
+    const recipes = await Recipe.findAll({
+      where: {
+        ip,
+      },
+    });
+    return recipes.filter((recipe) => {
+      const createdTime = new Date(recipe.createdAt);
+      const today = new Date();
+      return (
+        createdTime.getFullYear() === today.getFullYear() &&
+        createdTime.getMonth() === today.getMonth() &&
+        createdTime.getDate() === today.getDate()
+      );
+    }).length;
+  } catch (error) {
+    console.log(error);
+    return 100;
+  }
+};
+
 export const createVariations = async (req, res) => {
+  let ip =
+    req.headers["x-forwarded-for"] ||
+    req.headers["x-real-ip"] ||
+    req.connection.remoteAddress ||
+    req.socket.remoteAddress ||
+    req.connection.socket.remoteAddress;
+
+  ip = ip.split(",")[0];
+  ip = ip.includes("::ffff:") ? ip.split("::ffff:")[1] : ip;
+
+  console.log("ip", ip);
+  const usedCount = await getCount(ip);
+  if (usedCount > 1) {
+    return res.status(429).json({ message: "Daily usage limit exceeded" });
+  }
   const { nutrition, protein, cuisine } = req.body;
   if (!nutrition || !protein || !cuisine) {
     return res.status(400).json({ message: "Missing required fields" });
   }
   try {
-    const recipe = await Recipe.create({ protein, nutrition, cuisine });
+    const recipe = await Recipe.create({ protein, nutrition, cuisine, ip });
     const { variations: options, response } = await createOptions(
       protein,
       nutrition,
@@ -109,7 +146,23 @@ export const getRecipe = async (req, res) => {
 
       return res.send(completedRecipe);
     }
-    const {recipe: generatedRecipe, response} = await generateRecipe(
+
+    let ip =
+      req.headers["x-forwarded-for"] ||
+      req.headers["x-real-ip"] ||
+      req.connection.remoteAddress ||
+      req.socket.remoteAddress ||
+      req.connection.socket.remoteAddress;
+
+    ip = ip.split(",")[0];
+    ip = ip.includes("::ffff:") ? ip.split("::ffff:")[1] : ip;
+
+    console.log("ip", ip);
+    const usedCount = await getCount(ip);
+    if (usedCount > 2) {
+      return res.status(429).json({ message: "Daily usage limit exceeded" });
+    }
+    const { recipe: generatedRecipe, response } = await generateRecipe(
       recipe.title,
       recipe.description
     );
@@ -143,9 +196,16 @@ export const getRecipe = async (req, res) => {
 
     const ingredients = await Promise.all(
       generatedRecipe.ingredients.map((ingredient) => {
-        const newIngredient = `${ingredient.quantity && ingredient.quantity.toLowerCase() !== "none" ? ingredient.quantity : ""} <strong>${
-          ingredient.name
-        }</strong> <em>${ingredient.preparationMethod && ingredient.preparationMethod.toLowerCase() !== "none" ? ingredient.preparationMethod : ""}</em>`;
+        const newIngredient = `${
+          ingredient.quantity && ingredient.quantity.toLowerCase() !== "none"
+            ? ingredient.quantity
+            : ""
+        } <strong>${ingredient.name}</strong> <em>${
+          ingredient.preparationMethod &&
+          ingredient.preparationMethod.toLowerCase() !== "none"
+            ? ingredient.preparationMethod
+            : ""
+        }</em>`;
         return Ingredient.create({
           recipe: recipe.id,
           description: newIngredient,

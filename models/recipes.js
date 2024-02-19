@@ -37,6 +37,10 @@ const Recipe = sequelize.define(
       type: DataTypes.INTEGER,
       defaultValue: 0,
     },
+    ip: {
+      type: DataTypes.STRING,
+      defaultValue: ''
+    }
   },
   {
     timestamps: true,

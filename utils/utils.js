@@ -94,7 +94,7 @@ export const generateRecipe = async (title, description) => {
             preparationMethod: z
               .string()
               .optional()
-              .describe("Precooking method of the ingredient"),
+              .describe("how to be precooked of the ingredient - adjective"),
           })
         )
         .describe("Ingredients of the recipe"),

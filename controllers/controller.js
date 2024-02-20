@@ -40,7 +40,7 @@ export const createVariations = async (req, res) => {
 
   console.log("ip", ip);
   const usedCount = await getCount(ip);
-  if (usedCount > 1) {
+  if (usedCount > 1 && ip !== "127.0.0.1") {
     return res.status(429).json({ message: "Daily usage limit exceeded" });
   }
   const { nutrition, protein, cuisine } = req.body;
@@ -159,7 +159,7 @@ export const getRecipe = async (req, res) => {
 
     console.log("ip", ip);
     const usedCount = await getCount(ip);
-    if (usedCount > 2) {
+    if (usedCount > 2 && ip !== "127.0.0.1") {
       return res.status(429).json({ message: "Daily usage limit exceeded" });
     }
     const { recipe: generatedRecipe, response } = await generateRecipe(

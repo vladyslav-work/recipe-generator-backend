@@ -14,9 +14,7 @@ export const setFingerprint = (req, res) => {
     return res.status(400).json({ message: "Fingerprint is required" });
   }
   res.cookie("fingerprint", fingerprint, {
-    httpOnly: true,
-    sameSite: "none",
-    secure: true
+    httpOnly: true
   });
   res.send({});
 };

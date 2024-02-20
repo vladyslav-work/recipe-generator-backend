@@ -40,6 +40,10 @@ const Recipe = sequelize.define(
     ip: {
       type: DataTypes.STRING,
       defaultValue: ''
+    },
+    fingerprint: {
+      type: DataTypes.STRING,
+      defaultValue: ''
     }
   },
   {

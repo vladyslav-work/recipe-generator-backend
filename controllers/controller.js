@@ -4,12 +4,28 @@ import Ingredient from "../models/ingredients.js";
 import Variation from "../models/variations.js";
 import { createImage, createOptions, generateRecipe } from "../utils/utils.js";
 import Response from "../models/responses.js";
+import { Op } from "sequelize";
 
-const getCount = async (ip) => {
+export const setFingerprint = (req, res) => {
+  const { fingerprint } = req.body;
+
+  console.log(fingerprint);
+  if (!fingerprint) {
+    return res.status(400).json({ message: "Fingerprint is required" });
+  }
+  res.cookie("fingerprint", fingerprint, {
+    httpOnly: true,
+    sameSite: "none",
+    secure: true
+  });
+  res.send({});
+};
+
+const getCount = async (ip, fingerprint) => {
   try {
     const recipes = await Recipe.findAll({
       where: {
-        ip,
+        [Op.or]: [{ ip }, { fingerprint }],
       },
     });
     return recipes.filter((recipe) => {
@@ -39,8 +55,13 @@ export const createVariations = async (req, res) => {
   ip = ip.includes("::ffff:") ? ip.split("::ffff:")[1] : ip;
 
   console.log("ip", ip);
-  const usedCount = await getCount(ip);
-  if (usedCount > 1 && ip !== "127.0.0.1") {
+
+  const fingerprint = req.fingerprint;
+
+  console.log("fingerprint", fingerprint);
+
+  const usedCount = await getCount(ip, fingerprint);
+  if (usedCount > 1/* && ip !== "127.0.0.1"*/) {
     return res.status(429).json({ message: "Daily usage limit exceeded" });
   }
   const { nutrition, protein, cuisine } = req.body;
@@ -48,7 +69,7 @@ export const createVariations = async (req, res) => {
     return res.status(400).json({ message: "Missing required fields" });
   }
   try {
-    const recipe = await Recipe.create({ protein, nutrition, cuisine, ip });
+    const recipe = await Recipe.create({ protein, nutrition, cuisine, ip, fingerprint });
     const { variations: options, response } = await createOptions(
       protein,
       nutrition,
@@ -104,11 +125,13 @@ export const selectVariation = async (req, res) => {
     if (!variation)
       return res.status(404).send({ message: "There is no variation." });
     const recipe = await Recipe.findByPk(recipeId);
+
     if (!recipe)
       return res.status(404).send({ message: "There is no recipe." });
+    if (recipe.image)
+      return res.status(404).send({ message: "A recipe was already created" });
     recipe.title = variation.title;
     recipe.description = variation.description;
-    recipe.image = null;
     await recipe.save();
     res.json({});
   } catch (error) {
@@ -147,21 +170,6 @@ export const getRecipe = async (req, res) => {
       return res.send(completedRecipe);
     }
 
-    let ip =
-      req.headers["x-forwarded-for"] ||
-      req.headers["x-real-ip"] ||
-      req.connection.remoteAddress ||
-      req.socket.remoteAddress ||
-      req.connection.socket.remoteAddress;
-
-    ip = ip.split(",")[0];
-    ip = ip.includes("::ffff:") ? ip.split("::ffff:")[1] : ip;
-
-    console.log("ip", ip);
-    const usedCount = await getCount(ip);
-    if (usedCount > 2 && ip !== "127.0.0.1") {
-      return res.status(429).json({ message: "Daily usage limit exceeded" });
-    }
     const { recipe: generatedRecipe, response } = await generateRecipe(
       recipe.title,
       recipe.description

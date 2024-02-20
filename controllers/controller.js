@@ -59,7 +59,7 @@ export const createVariations = async (req, res) => {
   console.log("fingerprint", fingerprint);
 
   const usedCount = await getCount(ip, fingerprint);
-  if (usedCount > 1/* && ip !== "127.0.0.1"*/) {
+  if (usedCount > 19 && ip !== "127.0.0.1") {
     return res.status(429).json({ message: "Daily usage limit exceeded" });
   }
   const { nutrition, protein, cuisine } = req.body;

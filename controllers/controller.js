@@ -218,16 +218,6 @@ export const getRecipe = async (req, res) => {
         });
       })
     );
-    const imageURL = await createImage(
-      recipe.title,
-      recipe.description,
-      generatedRecipe.directions,
-      generatedRecipe.ingredients.map((ingredient) =>
-        Object.values(ingredient).join(" ")
-      )
-    );
-
-    recipe.image = imageURL;
     /// have to download image
     await recipe.save();
     const completedRecipe = {
@@ -237,6 +227,36 @@ export const getRecipe = async (req, res) => {
     };
 
     res.send(completedRecipe);
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Interval server error!" });
+  }
+};
+
+export const getImage = async (req, res) => {
+  const { recipeId } = req.params;
+  if (!recipeId) {
+    return res.status(400).json({ message: "Recipe id is required" });
+  }
+  try {
+    const recipe = await Recipe.findByPk(recipeId);
+    if (!recipe) {
+      return res.status(400).json({ message: "Recipe Id is not valid" });
+    }
+    if (recipe.image) {
+      return res.send(recipe.image);
+    }
+
+    const imageURL = await createImage(
+      recipe.title,
+      recipe.description
+    );
+
+    recipe.image = imageURL;
+    /// have to download image
+    await recipe.save();
+
+    res.send(imageURL);
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: "Interval server error!" });

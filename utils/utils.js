@@ -153,23 +153,15 @@ export const generateRecipe = async (title, description) => {
 export const createImage = async (
   title,
   description,
-  directions,
-  ingredients
 ) => {
-  const directionsString = directions
-    .map((direction, index) => index + 1 + " " + direction)
-    .join("\n");
-  const ingredientsString = ingredients
-    .map((ingredient, index) => index + 1 + " " + ingredient)
-    .join("\n");
   const prompt = `
   I NEED to test how the tool works with extremely simple prompts. DO NOT add any detail, just use it AS-IS:
 
   Please create an image of ${title}
 
-  Description: ${description}
+  Description of the dish: ${description}
 
-  Don't contain images of ingredients.
+  Don't contain images of ingredients and any text.
   `;
 
   try {

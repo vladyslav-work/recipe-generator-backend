@@ -52,11 +52,9 @@ export const createVariations = async (req, res) => {
   ip = ip.split(",")[0];
   ip = ip.includes("::ffff:") ? ip.split("::ffff:")[1] : ip;
 
-  console.log("ip", ip);
 
   const fingerprint = req.fingerprint;
 
-  console.log("fingerprint", fingerprint);
 
   const usedCount = await getCount(ip, fingerprint);
   if (usedCount > 19 && ip !== "127.0.0.1") {

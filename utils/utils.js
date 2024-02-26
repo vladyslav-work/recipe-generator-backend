@@ -58,11 +58,9 @@ export const createOptions = async (protein, nutrition, cuisine) => {
   });
 
   const response = await model.invoke(input);
-  console.log("variations ================> \n", response);
 
   try {
     const variations = await parser.parse(response);
-    console.log(response);
     return {variations, response};
   } catch (e) {
     console.error("Failed to parse bad output: ", e);
@@ -72,7 +70,6 @@ export const createOptions = async (protein, nutrition, cuisine) => {
       parser
     );
     const output = await fixParser.parse(response);
-    console.log("Fixed output: ", output);
     return {variations:output, response};
   }
 };
@@ -126,10 +123,8 @@ export const generateRecipe = async (title, description) => {
 
   const input = await prompt.format({ title, description });
   const response = await model.invoke(input);
-  console.log("Recipe ================= \n", response);
   try {
     const recipe = await parser.parse(response);
-    console.log("recipe", recipe);
     return {recipe, response};
   } catch (error) {
     let count = 0;
@@ -141,7 +136,6 @@ export const generateRecipe = async (title, description) => {
           parser
         );
         const fixedRecipe = await fixParser.parse(response);
-        console.log("fixedRecipe", fixedRecipe);
         return {recipe: fixedRecipe, response};
       } catch (error) {
         console.log(error);

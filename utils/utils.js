@@ -40,7 +40,9 @@ export const createOptions = async (protein, nutrition, cuisine) => {
     Ingredient: {protein}
     Food Type: {nutrition}
     Cuisine: {cuisine}
-    \nA variation must consist of a title and a simple description that is shorter than 50 characters.`,
+    \nA variation must consist of a title and a simple description that is shorter than 50 characters.
+    
+    Output has to be JSON that can be parsed and don't contain '\n'`,
     inputVariables: ["protein", "nutrition", "cuisine"],
     partialVariables: { format_instructions: formatInstructions },
   });
@@ -57,20 +59,21 @@ export const createOptions = async (protein, nutrition, cuisine) => {
     cuisine,
   });
 
+
   const response = await model.invoke(input);
 
   try {
-    const variations = await parser.parse(response);
-    return {variations, response};
+    const result = JSON.parse(response);
+    const keys = Object.keys(result);
+    for (let i = 0; i < keys.length; i++) {
+      const key = keys[i];
+      if (result[key] && result[key].length === 3) {
+        return { variations: result[key], response };
+      }
+    }
   } catch (e) {
-    console.error("Failed to parse bad output: ", e);
-
-    const fixParser = OutputFixingParser.fromLLM(
-      new OpenAI({ temperature: 0, modelName: "gpt-3.5-turbo" }),
-      parser
-    );
-    const output = await fixParser.parse(response);
-    return {variations:output, response};
+    console.log(e);
+    return null
   }
 };
 
@@ -87,7 +90,11 @@ export const generateRecipe = async (title, description) => {
               .string()
               .optional()
               .describe("Quantity of the ingredient"),
-            name: z.string().describe("Name of the ingredient( must be the name of ingredient WITHOUT preparation method )"),
+            name: z
+              .string()
+              .describe(
+                "Name of the ingredient( must be the name of ingredient WITHOUT preparation method )"
+              ),
             preparationMethod: z
               .string()
               .optional()
@@ -106,16 +113,28 @@ export const generateRecipe = async (title, description) => {
   const formatInstructions = parser.getFormatInstructions();
 
   const prompt = new PromptTemplate({
-    template: `Create a recipe titled {title} with the following description: {description}.
+    template: `
+    PURPOSE:
+    Create a recipe titled {title} with the following description: {description}.
     
-    A recipe should include a title, a detailed description, serving size, ingredients, instructions, and total time for preparation in minutes.`,
+    DESCRIPTION:
+    A recipe should include a title, a detailed description, serving size, ingredients, instructions, and total time for preparation in minutes.
+    
+    OUTPUT:
+
+    Ensure that the output is in JSON format for easy parsing. Align the structure of the output with the provided JSON Schema instance, paying close attention to the keys specified in the JSON Schema.
+
+    Keys of output : "title", "description", "serving", "ingredients","directions", " readyTime"
+
+    Each ingredient should have the following keys: "quantity", "name", "preparationMethod"
+    `,
     inputVariables: ["title", "description"],
     partialVariables: { format_instructions: formatInstructions },
   });
 
   const openAIConfig = {
     openAIApiKey: process.env.OPENAI_API_KEY,
-    temperature: 0,
+    temperature: 0.35,
     modelName: "gpt-3.5-turbo",
   };
 
@@ -124,30 +143,15 @@ export const generateRecipe = async (title, description) => {
   const input = await prompt.format({ title, description });
   const response = await model.invoke(input);
   try {
-    const recipe = await parser.parse(response);
-    return {recipe, response};
+    const recipe = JSON.parse(response)
+    return { recipe, response };
   } catch (error) {
-    let count = 0;
-    while (count < 10) {
-      count += 1;
-      try {
-        const fixParser = OutputFixingParser.fromLLM(
-          new OpenAI(openAIConfig),
-          parser
-        );
-        const fixedRecipe = await fixParser.parse(response);
-        return {recipe: fixedRecipe, response};
-      } catch (error) {
-        console.log(error);
-      }
-    }
+    console.log(error);
+    return null;
   }
 };
 
-export const createImage = async (
-  title,
-  description,
-) => {
+export const createImage = async (title, description) => {
   const prompt = `
   I NEED to test how the tool works with extremely simple prompts. DO NOT add any detail, just use it AS-IS:
 
@@ -181,7 +185,10 @@ export const createImage = async (
     // 👇️ "/home/john/Desktop/javascript"
     const __dirname = path.dirname(__filename);
     const dirPath = path.join(__dirname, "../public/api/images");
-    const imagePath = path.resolve(__dirname, `../public/api/images/${imageName}`);
+    const imagePath = path.resolve(
+      __dirname,
+      `../public/api/images/${imageName}`
+    );
 
     // Make sure the directory exists
     if (!fs.existsSync(dirPath)) {

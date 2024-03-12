@@ -116,7 +116,7 @@ export const generateRecipe = async (title, description) => {
     Create a recipe titled {title} with the following description: {description}.
     
     DESCRIPTION:
-    A recipe should include a title, a detailed description, serving size, ingredients, instructions, and total time for preparation in minutes.
+    A recipe should include a title, a newly generated and detailed description, serving size, ingredients, instructions, and total time for preparation in minutes.
     
     OUTPUT:
 

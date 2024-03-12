@@ -3,7 +3,6 @@ import Direction from "../models/directions.js";
 import Ingredient from "../models/ingredients.js";
 import Variation from "../models/variations.js";
 import { createImage, createOptions, generateRecipe } from "../utils/utils.js";
-import Response from "../models/responses.js";
 import { Op } from "sequelize";
 
 export const setFingerprint = (req, res) => {
@@ -14,19 +13,27 @@ export const setFingerprint = (req, res) => {
     return res.status(400).json({ message: "Fingerprint is required" });
   }
   res.cookie("fingerprint", fingerprint, {
-    httpOnly: true
+    httpOnly: true,
   });
   res.send({});
 };
 
-const getCount = async (ip, fingerprint) => {
+const getCount = async (ip, fingerprint, isRecipe = false) => {
   try {
-    const recipes = await Recipe.findAll({
-      where: {
-        [Op.or]: [{ ip }, { fingerprint }],
-      },
-    });
-    return recipes.filter((recipe) => {
+    let objects = [];
+    if (isRecipe)
+      objects = await Recipe.findAll({
+        where: {
+          [Op.or]: [{ ip }, { fingerprint }],
+        },
+      });
+    else
+      objects = await Variation.findAll({
+        where: {
+          [Op.or]: [{ ip }, { fingerprint }],
+        },
+      });
+    return objects.filter((recipe) => {
       const createdTime = new Date(recipe.createdAt);
       const today = new Date();
       return (
@@ -52,211 +59,128 @@ export const createVariations = async (req, res) => {
   ip = ip.split(",")[0];
   ip = ip.includes("::ffff:") ? ip.split("::ffff:")[1] : ip;
 
-
   const fingerprint = req.fingerprint;
 
-
-  const usedCount = await getCount(ip, fingerprint);
-  if (usedCount > 19 && ip !== "127.0.0.1") {
-    return res.status(429).json({ message: "Daily usage limit exceeded" });
-  }
+  // const usedCount = await getCount(ip, fingerprint);
+  // if (usedCount > 19 && ip !== "127.0.0.1") {
+  //   return res.status(429).json({ message: "Daily usage limit exceeded" });
+  // }
   const { nutrition, protein, cuisine } = req.body;
   if (!nutrition || !protein || !cuisine) {
     return res.status(400).json({ message: "Missing required fields" });
   }
   try {
-    const recipe = await Recipe.create({ protein, nutrition, cuisine, ip, fingerprint });
-    const { variations: options, response } = await createOptions(
+    const { variations, response } = await createOptions(
       protein,
       nutrition,
       cuisine
     );
-    const variations = await Promise.all(
-      options.map((option) => {
-        return Variation.create({
-          recipe: recipe.id,
-          description: option.description,
-          title: option.title,
-        });
-      })
-    );
-    const responseObj = await Response.findOne({
-      where: { recipe: recipe.id },
+    Variation.create({
+      protein,
+      nutrition,
+      cuisine,
+      description1: variations[0].description,
+      title1: variations[0].title,
+      description2: variations[1].description,
+      title2: variations[1].title,
+      description3: variations[2].description,
+      title3: variations[2].title,
+      response: response,
     });
-    if (responseObj) {
-      await Response.update(
-        { variations: response },
-        { where: { id: responseObj.id } }
-      );
-    } else
-      await Response.create({
+
+    res.send({ variations });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Interval server error!" });
+  }
+};
+
+const saveAllData = async (
+  protein,
+  nutrition,
+  cuisine,
+  generatedRecipe,
+  response
+) => {
+  const { readyTime, serving, title, description } = generatedRecipe;
+  const recipe = await Recipe.create({
+    protein,
+    nutrition,
+    cuisine,
+    response,
+    title,
+    description,
+    readyTime,
+    serving,
+  });
+  await Promise.all(
+    generatedRecipe.directions.map((direction) =>
+      Direction.create({
         recipe: recipe.id,
-        variations: response,
-      });
-
-    res.send({ recipeId: recipe.id, variations });
-  } catch (error) {
-    console.log(error);
-    res.status(500).json({ message: "Interval server error!" });
-  }
-};
-
-export const getVariations = async (req, res) => {
-  const { id } = req.params;
-  try {
-    const variations = await Variation.findAll({ where: { recipe: id } });
-    if (variations.length === 0)
-      return res.status(404).send({ message: "There is no variations." });
-    res.send(variations);
-  } catch (error) {
-    console.log(error);
-    res.status(500).send({ message: "Internal server error." });
-  }
-};
-
-export const selectVariation = async (req, res) => {
-  const { recipeId, variationId } = req.body;
-  try {
-    const variation = await Variation.findByPk(variationId);
-    if (!variation)
-      return res.status(404).send({ message: "There is no variation." });
-    const recipe = await Recipe.findByPk(recipeId);
-
-    if (!recipe)
-      return res.status(404).send({ message: "There is no recipe." });
-    if (recipe.image)
-      return res.status(404).send({ message: "A recipe was already created" });
-    recipe.title = variation.title;
-    recipe.description = variation.description;
-    await recipe.save();
-    res.json({});
-  } catch (error) {
-    console.log(error);
-    res.status(500).send({ message: "Internal server error." });
-  }
-};
-
-export const getRecipe = async (req, res) => {
-  const { recipeId } = req.params;
-  if (!recipeId) {
-    return res.status(400).json({ message: "Recipe id is required" });
-  }
-  try {
-    const recipe = await Recipe.findByPk(recipeId);
-    if (!recipe) {
-      return res.status(400).json({ message: "Recipe Id is not valid" });
-    }
-    if (recipe.image) {
-      const ingredients = await Ingredient.findAll({
-        where: {
-          recipe: recipeId,
-        },
-      });
-      const directions = await Direction.findAll({
-        where: {
-          recipe: recipeId,
-        },
-      });
-      const completedRecipe = {
-        recipe,
-        ingredients,
-        directions,
-      };
-
-      return res.send(completedRecipe);
-    }
-
-    const { recipe: generatedRecipe, response } = await generateRecipe(
-      recipe.title,
-      recipe.description
-    );
-    const responseObj = await Response.findOne({
-      where: { recipe: recipeId },
-    });
-    if (responseObj) {
-      await Response.update(
-        { main: response },
-        { where: { id: responseObj.id } }
-      );
-    } else
-      await Response.create({
-        recipe: recipeId,
-        main: response,
-      });
-    recipe.title = generatedRecipe.title;
-    recipe.description = generatedRecipe.description;
-    recipe.serving = generatedRecipe.serving;
-    recipe.readyTime = generatedRecipe.readyTime;
-    await Direction.destroy({ where: { recipe: recipeId } });
-    await Ingredient.destroy({ where: { recipe: recipeId } });
-    const directions = await Promise.all(
-      generatedRecipe.directions.map((direction) =>
-        Direction.create({
-          recipe: recipe.id,
-          description: direction,
-        })
-      )
-    );
-
-    const ingredients = await Promise.all(
-      generatedRecipe.ingredients.map((ingredient) => {
-        const newIngredient = `${
-          ingredient.quantity && ingredient.quantity.toLowerCase() !== "none"
-            ? ingredient.quantity
-            : ""
-        } <strong>${ingredient.name}</strong> <em>${
-          ingredient.preparationMethod &&
-          ingredient.preparationMethod.toLowerCase() !== "none"
-            ? ingredient.preparationMethod
-            : ""
-        }</em>`;
-        return Ingredient.create({
-          recipe: recipe.id,
-          description: newIngredient,
-        });
+        description: direction,
       })
-    );
-    /// have to download image
-    await recipe.save();
-    const completedRecipe = {
-      recipe,
-      ingredients,
-      directions,
-    };
-
-    res.send(completedRecipe);
-  } catch (error) {
-    console.log(error);
-    res.status(500).json({ message: "Interval server error!" });
-  }
+    )
+  );
+  await Promise.all(
+    generatedRecipe.ingredients.map((ingredient) => {
+      const newIngredient = `${
+        ingredient.quantity && ingredient.quantity.toLowerCase() !== "none"
+          ? ingredient.quantity
+          : ""
+      } <strong>${ingredient.name}</strong> <em>${
+        ingredient.preparationMethod &&
+        ingredient.preparationMethod.toLowerCase() !== "none"
+          ? ingredient.preparationMethod
+          : ""
+      }</em>`;
+      return Ingredient.create({
+        recipe: recipe.id,
+        description: newIngredient,
+      });
+    })
+  );
 };
 
-export const getImage = async (req, res) => {
-  const { recipeId } = req.params;
-  if (!recipeId) {
-    return res.status(400).json({ message: "Recipe id is required" });
+export const createRecipe = async (req, res) => {
+  const { title, description, protein, nutrition, cuisine } = req.body;
+  if (!title || !description) {
+    return res
+      .status(400)
+      .json({ message: "Title and description are required" });
   }
   try {
-    const recipe = await Recipe.findByPk(recipeId);
-    if (!recipe) {
-      return res.status(400).json({ message: "Recipe Id is not valid" });
-    }
-    if (recipe.image) {
-      return res.send(recipe.image);
-    }
-
-    const imageURL = await createImage(
-      recipe.title,
-      recipe.description
-    );
-
-    recipe.image = imageURL;
-    /// have to download image
-    await recipe.save();
-
-    res.send(imageURL);
+    const { recipe, response } = await generateRecipe(title, description);
+    saveAllData(protein, nutrition, cuisine, recipe, response);
+    res.send({ protein, nutrition, cuisine, ...recipe });
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: "Interval server error!" });
   }
 };
+
+// export const getImage = async (req, res) => {
+//   const { recipeId } = req.params;
+//   if (!recipeId) {
+//     return res.status(400).json({ message: "Recipe id is required" });
+//   }
+//   try {
+//     const recipe = await Recipe.findByPk(recipeId);
+//     if (!recipe) {
+//       return res.status(400).json({ message: "Recipe Id is not valid" });
+//     }
+//     if (recipe.image) {
+//       return res.send(recipe.image);
+//     }
+
+//     const imageURL = await createImage(recipe.title, recipe.description);
+
+//     recipe.image = imageURL;
+//     /// have to download image
+//     await recipe.save();
+
+//     res.send(imageURL);
+//   } catch (error) {
+//     console.log(error);
+//     res.status(500).json({ message: "Interval server error!" });
+//   }
+// };

@@ -108,10 +108,8 @@ export const generateRecipe = async (title, description) => {
         .describe("Total preparation time in minutes of the recipe"),
     })
     .describe("the recipe generated");
-
   const parser = StructuredOutputParser.fromZodSchema(schema);
   const formatInstructions = parser.getFormatInstructions();
-
   const prompt = new PromptTemplate({
     template: `
     PURPOSE:
@@ -124,7 +122,7 @@ export const generateRecipe = async (title, description) => {
 
     Ensure that the output is in JSON format for easy parsing. Align the structure of the output with the provided JSON Schema instance, paying close attention to the keys specified in the JSON Schema.
 
-    Keys of output : "title", "description", "serving", "ingredients","directions", " readyTime"
+    Keys of output : "title", "description", "serving", "ingredients","directions", "readyTime"
 
     Each ingredient should have the following keys: "quantity", "name", "preparationMethod"
     `,
@@ -137,11 +135,11 @@ export const generateRecipe = async (title, description) => {
     temperature: 0.35,
     modelName: "gpt-3.5-turbo",
   };
-
   const model = new OpenAI(openAIConfig);
-
   const input = await prompt.format({ title, description });
+  console.log(new Date());
   const response = await model.invoke(input);
+  console.log(new Date());
   try {
     const recipe = JSON.parse(response)
     return { recipe, response };

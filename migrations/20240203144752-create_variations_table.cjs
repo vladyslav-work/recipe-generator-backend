@@ -10,26 +10,50 @@ module.exports = {
         primaryKey: true,
         type: Sequelize.INTEGER
       },
-      recipe: {
-        type: Sequelize.INTEGER,
-        references: {
-          model: "recipes",
-          key: "id"
-        },
-        onUpdate: "CASCADE",
-        onDelete: "CASCADE"
+      protein: {
+        type: Sequelize.TEXT,
       },
-      title: {
+      nutrition: {
+        type: Sequelize.TEXT,
+      },
+      cuisine: {
+        type: Sequelize.TEXT,
+      },
+      title1: {
         type: Sequelize.TEXT,
         allowNull: false
       },
-      description: {
+      description1: {
         type: Sequelize.TEXT,
         allowNull: false
       },
-      selected: {
-        type: Sequelize.BOOLEAN,
-        defaultValue: false
+      title2: {
+        type: Sequelize.TEXT,
+        allowNull: false
+      },
+      description2: {
+        type: Sequelize.TEXT,
+        allowNull: false
+      },
+      title3: {
+        type: Sequelize.TEXT,
+        allowNull: false
+      },
+      description3: {
+        type: Sequelize.TEXT,
+        allowNull: false
+      },
+      response: {
+        type: Sequelize.TEXT,
+        allowNull: false
+      },
+      ip: {
+        type: Sequelize.TEXT,
+        defaultValue: ""
+      },
+      fingerprint: {
+        type: Sequelize.TEXT,
+        defaultValue: ""
       },
       createdAt: {
         allowNull: false,

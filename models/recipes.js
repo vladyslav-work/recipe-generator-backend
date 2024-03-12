@@ -4,10 +4,6 @@ import sequelize from "../seq.js";
 const Recipe = sequelize.define(
   "recipes",
   {
-    step:{
-      type: DataTypes.NUMBER,
-      default: 0
-    },
     protein: {
       type: DataTypes.TEXT,
       allowNull: false,
@@ -26,9 +22,9 @@ const Recipe = sequelize.define(
     description: {
       type: DataTypes.TEXT
     },
-    image:{
-      type: DataTypes.TEXT,
-    },
+    // image:{
+    //   type: DataTypes.TEXT,
+    // },
     serving: {
       type: DataTypes.INTEGER,
       default: 0
@@ -44,7 +40,10 @@ const Recipe = sequelize.define(
     fingerprint: {
       type: DataTypes.STRING,
       defaultValue: ''
-    }
+    },
+    response: {
+      type: DataTypes.TEXT
+    },
   },
   {
     timestamps: true,

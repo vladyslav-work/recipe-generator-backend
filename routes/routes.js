@@ -9,7 +9,7 @@ router.post("/", hasFingerprint, createVariations);
 // router.post("/select", selectVariation);
 // router.get("/:recipeId", getRecipe);
 // router.get("/:recipeId/image", getImage);
-router.post("/fingerprint", hasFingerprint, setFingerprint)
-router.post("/generate", createRecipe)
+router.post("/fingerprint", setFingerprint)
+router.post("/generate", hasFingerprint, createRecipe)
 
 export default router;

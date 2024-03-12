@@ -4,12 +4,12 @@ import { hasFingerprint } from "../middleware/middleware.js";
 
 const router = express.Router();
 
-router.post("/", createVariations);
+router.post("/", hasFingerprint, createVariations);
 // router.get("/variations/:id", getVariations);
 // router.post("/select", selectVariation);
 // router.get("/:recipeId", getRecipe);
 // router.get("/:recipeId/image", getImage);
-router.post("/fingerprint", setFingerprint)
+router.post("/fingerprint", hasFingerprint, setFingerprint)
 router.post("/generate", createRecipe)
 
 export default router;

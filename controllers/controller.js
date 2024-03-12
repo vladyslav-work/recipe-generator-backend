@@ -61,10 +61,10 @@ export const createVariations = async (req, res) => {
 
   const fingerprint = req.fingerprint;
 
-  // const usedCount = await getCount(ip, fingerprint);
-  // if (usedCount > 19 && ip !== "127.0.0.1") {
-  //   return res.status(429).json({ message: "Daily usage limit exceeded" });
-  // }
+  const usedCount = await getCount(ip, fingerprint);
+  if (usedCount > 19 && ip !== "127.0.0.1") {
+    return res.status(429).json({ message: "Daily usage limit exceeded" });
+  }
   const { nutrition, protein, cuisine } = req.body;
   if (!nutrition || !protein || !cuisine) {
     return res.status(400).json({ message: "Missing required fields" });

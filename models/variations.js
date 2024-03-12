@@ -41,6 +41,10 @@ const Variation = sequelize.define(
       type: DataTypes.TEXT,
       allowNull: false,
     },
+    response:{
+      type: DataTypes.TEXT,
+      allowNull: false,
+    },
     ip: {
       type: DataTypes.STRING,
       defaultValue: ''

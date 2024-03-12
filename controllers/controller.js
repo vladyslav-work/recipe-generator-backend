@@ -102,43 +102,48 @@ const saveAllData = async (
   generatedRecipe,
   response
 ) => {
-  const { readyTime, serving, title, description } = generatedRecipe;
-  const recipe = await Recipe.create({
-    protein,
-    nutrition,
-    cuisine,
-    response,
-    title,
-    description,
-    readyTime,
-    serving,
-  });
-  await Promise.all(
-    generatedRecipe.directions.map((direction) =>
-      Direction.create({
-        recipe: recipe.id,
-        description: direction,
+  try {
+    const { readyTime, serving, title, description } = generatedRecipe;
+    const recipe = await Recipe.create({
+      protein,
+      nutrition,
+      cuisine,
+      response,
+      title,
+      description,
+      readyTime,
+      serving,
+      response,
+    });
+    await Promise.all(
+      generatedRecipe.directions.map((direction) =>
+        Direction.create({
+          recipe: recipe.id,
+          description: direction,
+        })
+      )
+    );
+    await Promise.all(
+      generatedRecipe.ingredients.map((ingredient) => {
+        const newIngredient = `${
+          ingredient.quantity && ingredient.quantity.toLowerCase() !== "none"
+            ? ingredient.quantity
+            : ""
+        } <strong>${ingredient.name}</strong> <em>${
+          ingredient.preparationMethod &&
+          ingredient.preparationMethod.toLowerCase() !== "none"
+            ? ingredient.preparationMethod
+            : ""
+        }</em>`;
+        return Ingredient.create({
+          recipe: recipe.id,
+          description: newIngredient,
+        });
       })
-    )
-  );
-  await Promise.all(
-    generatedRecipe.ingredients.map((ingredient) => {
-      const newIngredient = `${
-        ingredient.quantity && ingredient.quantity.toLowerCase() !== "none"
-          ? ingredient.quantity
-          : ""
-      } <strong>${ingredient.name}</strong> <em>${
-        ingredient.preparationMethod &&
-        ingredient.preparationMethod.toLowerCase() !== "none"
-          ? ingredient.preparationMethod
-          : ""
-      }</em>`;
-      return Ingredient.create({
-        recipe: recipe.id,
-        description: newIngredient,
-      });
-    })
-  );
+    );
+  } catch (error) {
+    console.log(error);
+  }
 };
 
 export const createRecipe = async (req, res) => {

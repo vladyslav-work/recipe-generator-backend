@@ -89,7 +89,7 @@ const generateIngredients = async (title, description) => {
     OUTPUT:
     - Output has to be JSON that can be parsed and don't contain '\n'
     - Each ingredient should be represented as a string with the quantity, name, and preparation method separated by commas.
-    template : "{quantity}, {name}, {preparation method}"
+    template : "[quantity], [name], [preparation method]"
     e.g. "1, onion, chopped", "2 lbs, pork shoulder, diced", "1 tsp, cumin`,
     inputVariables: ["title", "description"],
   });

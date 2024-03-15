@@ -89,8 +89,7 @@ const generateIngredients = async (title, description) => {
     OUTPUT:
 
     Output has to be JSON that can be parsed and don't contain '\n'
-    Each ingredient is a string containing quantity, name and preparation method of that ingredient and those values have to be separated by commas.
-    `,
+    Each ingredient should be represented as a string with the quantity, name, and preparation method separated by commas.    `,
     inputVariables: ["title", "description"],
   });
 

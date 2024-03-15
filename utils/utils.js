@@ -77,62 +77,64 @@ export const createOptions = async (protein, nutrition, cuisine) => {
   }
 };
 
-export const generateRecipe = async (title, description) => {
-  const schema = z
-    .object({
-      title: z.string().describe("Title of the recipe"),
-      description: z.string().describe("Detailed introduction of the recipe"),
-      serving: z.number().describe("Serving size of the recipe"),
-      ingredients: z
-        .array(
-          z.object({
-            quantity: z
-              .string()
-              .optional()
-              .describe("Quantity of the ingredient"),
-            name: z
-              .string()
-              .describe(
-                "Name of the ingredient( must be the name of ingredient WITHOUT preparation method )"
-              ),
-            preparationMethod: z
-              .string()
-              .optional()
-              .describe("Preparation method of the ingredient before cooking"),
-          })
-        )
-        .describe("Ingredients of the recipe"),
-      directions: z.array(z.string().describe("Instruction of the recipe")),
-      readyTime: z
-        .number()
-        .describe("Total preparation time in minutes of the recipe"),
-    })
-    .describe("the recipe generated");
-  const parser = StructuredOutputParser.fromZodSchema(schema);
-  const formatInstructions = parser.getFormatInstructions();
+const generateIngredients = async (title, description) => {
+  const prompt = new PromptTemplate({
+    template: `
+    PURPOSE:
+    As soon as possible, Create ingredients a recipe titled {title} with the following description: {description}.
+    
+    DESCRIPTION:
+    A recipe should include ingredients
+    
+    OUTPUT:
+
+    Output has to be JSON that can be parsed and don't contain '\n'
+    Each ingredient is a string containing quantity, name and preparation method of that ingredient, separated 3 values by commas.
+    `,
+    inputVariables: ["title", "description"],
+  });
+
+  const openAIConfig = {
+    openAIApiKey: process.env.OPENAI_API_KEY,
+    temperature: 0,
+    modelName: "gpt-3.5-turbo",
+  };
+  const model = new OpenAI(openAIConfig);
+  const input = await prompt.format({ title, description });
+  console.log(new Date());
+  const response = await model.invoke(input);
+  console.log(new Date());
+    try {
+    const recipe = JSON.parse(response.replace(/```json/g, "").replace(/```/g, ""))
+    return { ingredients: recipe.ingredients, response };
+  } catch (error) {
+    console.log(error);
+    return null;
+  }
+};
+
+const generateOthers = async (title, description) => {
   const prompt = new PromptTemplate({
     template: `
     PURPOSE:
     Create a recipe titled {title} with the following description: {description}.
     
     DESCRIPTION:
-    A recipe should include a title, a newly generated and detailed description, serving size, ingredients, instructions, and total time for preparation in minutes.
+    A recipe should include a title, a description( Generate more detailed ), serving size, and total time for preparation in minutes.
     
     OUTPUT:
 
-    Ensure that the output is in JSON format for easy parsing. Align the structure of the output with the provided JSON Schema instance, paying close attention to the keys specified in the JSON Schema.
+    Output has to be JSON that can be parsed and don't contain '\n'
+    Keys of output : "title", "description", "serving", "readyTime"
 
-    Keys of output : "title", "description", "serving", "ingredients","directions", "readyTime"
-
-    Each ingredient should have the following keys: "quantity", "name", "preparationMethod"
     `,
     inputVariables: ["title", "description"],
-    partialVariables: { format_instructions: formatInstructions },
   });
+
 
   const openAIConfig = {
     openAIApiKey: process.env.OPENAI_API_KEY,
-    temperature: 0.35,
+    temperature: 0,
     modelName: "gpt-3.5-turbo",
   };
   const model = new OpenAI(openAIConfig);
@@ -141,13 +143,62 @@ export const generateRecipe = async (title, description) => {
   const response = await model.invoke(input);
   console.log(new Date());
   try {
-    const recipe = JSON.parse(response)
+    const recipe = JSON.parse(response.replace(/```json/g, "").replace(/```/g, ""))
     return { recipe, response };
   } catch (error) {
     console.log(error);
     return null;
   }
 };
+
+
+const generateDirections = async (title, description) => {
+  const prompt = new PromptTemplate({
+    template: `
+    PURPOSE:
+    Create directions of a recipe titled {title} with the following description: {description}.
+    
+    DESCRIPTION:
+    A recipe should include directions
+    
+    OUTPUT:
+
+    Output has to be JSON that can be parsed and don't contain '\n'
+    `,
+    inputVariables: ["title", "description"],
+  });
+
+  const openAIConfig = {
+    openAIApiKey: process.env.OPENAI_API_KEY,
+    temperature: 0,
+    modelName: "gpt-3.5-turbo",
+  };
+  const model = new OpenAI(openAIConfig);
+  const input = await prompt.format({ title, description });
+  console.log(new Date());
+  const response = await model.invoke(input);
+  console.log(new Date());
+  try {
+    const recipe = JSON.parse(response.replace(/```json/g, "").replace(/```/g, ""))
+    return { directions: recipe.directions, response };
+  } catch (error) {
+    console.log(error);
+    return null;
+  }
+};
+
+export const generateRecipe = async (title, description) => {
+  const responses = await Promise.all([generateOthers(title, description), generateIngredients(title, description), generateDirections(title, description)])
+  return {recipe: {
+    title: responses[0].recipe.title,
+    description: responses[0].recipe.description,
+    serving: responses[0].recipe.serving,
+    readyTime: responses[0].recipe.readyTime,
+    ingredients: responses[1].ingredients,
+    directions: responses[2].directions,
+  }, response : responses.map(r => r.response).join("\n")}
+}
+
 
 export const createImage = async (title, description) => {
   const prompt = `

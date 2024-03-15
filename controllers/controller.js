@@ -61,10 +61,10 @@ export const createVariations = async (req, res) => {
 
   const fingerprint = req.fingerprint;
 
-  const usedCount = await getCount(ip, fingerprint);
-  if (usedCount > 19 && ip !== "127.0.0.1") {
-    return res.status(429).json({ message: "Daily usage limit exceeded" });
-  }
+  // const usedCount = await getCount(ip, fingerprint);
+  // if (usedCount > 19 && ip !== "127.0.0.1") {
+  //   return res.status(429).json({ message: "Daily usage limit exceeded" });
+  // }
   const { nutrition, protein, cuisine } = req.body;
   if (!nutrition || !protein || !cuisine) {
     return res.status(400).json({ message: "Missing required fields" });
@@ -104,7 +104,19 @@ const saveAllData = async (
 ) => {
   try {
     const { readyTime, serving, title, description } = generatedRecipe;
-    const recipe = await Recipe.create({
+    const existingRecipes = await Recipe.findAll({where: {title} });
+    console.log("=========>", existingRecipes.length);
+    await Promise.all(
+      existingRecipes.map((existingRecipe) => {
+        return Promise.all([
+          Ingredient.destroy({ where: { recipe: existingRecipe.id } }),
+          Direction.destroy({ where: { recipe: existingRecipe.id } }),
+          Recipe.destroy({ where: { id: existingRecipe.id } })
+        ]);
+      })
+    );
+    
+    const recipe = new Recipe({
       protein,
       nutrition,
       cuisine,
@@ -113,8 +125,8 @@ const saveAllData = async (
       description,
       readyTime,
       serving,
-      response,
     });
+    await recipe.save();
     await Promise.all(
       generatedRecipe.directions.map((direction) =>
         Direction.create({
@@ -125,19 +137,9 @@ const saveAllData = async (
     );
     await Promise.all(
       generatedRecipe.ingredients.map((ingredient) => {
-        const newIngredient = `${
-          ingredient.quantity && ingredient.quantity.toLowerCase() !== "none"
-            ? ingredient.quantity
-            : ""
-        } <strong>${ingredient.name}</strong> <em>${
-          ingredient.preparationMethod &&
-          ingredient.preparationMethod.toLowerCase() !== "none"
-            ? ingredient.preparationMethod
-            : ""
-        }</em>`;
         return Ingredient.create({
           recipe: recipe.id,
-          description: newIngredient,
+          description: ingredient,
         });
       })
     );
